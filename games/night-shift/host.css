@@ -1,0 +1,201 @@
+:root {
+  --rf-game-max-width: 960px;
+  --rf-game-aspect-ratio: 3 / 2;
+}
+
+/* Night Shift's first-run UI is still the official FriendSDK picker and wallet flow. */
+.rf-game-frame {
+  color: #edf3ff;
+  background: #11192c;
+  border: 1px solid rgba(151, 190, 224, .42);
+  box-shadow: 0 24px 80px rgba(1, 5, 16, .42), 0 0 36px rgba(73, 134, 184, .12);
+  font: 13px/1.5 "Segoe UI", Inter, system-ui, sans-serif;
+}
+.rf-frame-toolbar {
+  z-index: 40;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  gap: 7px;
+  font: 10px/1.3 "Segoe UI", Inter, system-ui, sans-serif;
+}
+.rf-frame-toolbar > * {
+  border: 1px solid rgba(156, 190, 221, .22);
+  border-radius: 7px;
+  background: rgba(13, 22, 39, .88);
+  color: #acbdd4;
+  padding: 5px 8px;
+  backdrop-filter: blur(10px);
+}
+.rf-frame-toolbar button { max-width: 34%; text-overflow: ellipsis; }
+.rf-frame-selected-friend { color: #b9f1d2; }
+.rf-game-frame .rf-frame-toolbar button:hover:not(:disabled) { border-color: rgba(200, 255, 112, .5); background: #203047; color: white; }
+.rf-frame-scrim {
+  z-index: 50;
+  padding: 22px;
+  background:
+    radial-gradient(ellipse at 15% 18%, rgba(59, 102, 155, .36), transparent 43%),
+    radial-gradient(ellipse at 83% 76%, rgba(178, 103, 62, .22), transparent 34%),
+    linear-gradient(135deg, rgba(9, 15, 29, .86), rgba(17, 20, 38, .82));
+  color: #eaf1fb;
+  font: 13px/1.5 "Segoe UI", Inter, system-ui, sans-serif;
+  backdrop-filter: blur(5px);
+}
+.rf-frame-menu {
+  position: relative;
+  width: min(570px, 100%);
+  max-height: calc(100% - 16px);
+  border: 1px solid rgba(142, 190, 225, .34);
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 100% 0, rgba(68, 133, 169, .18), transparent 44%),
+    linear-gradient(145deg, #1b2941, #111a2d 68%, #15192d);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .54), inset 0 1px rgba(255, 255, 255, .07), 0 0 42px rgba(82, 152, 190, .1);
+  color: #eaf1fb;
+}
+.rf-frame-menu:has(.rf-frame-friends)::before {
+  position: absolute;
+  top: 10px;
+  right: 23px;
+  width: 100px;
+  height: 49px;
+  border: 1px solid rgba(136, 199, 223, .23);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #182b49 0%, #334e71 66%, #b47b60 100%);
+  box-shadow: inset 0 0 0 4px rgba(11, 19, 34, .75), 0 0 24px rgba(90, 163, 198, .1);
+  content: "";
+  pointer-events: none;
+}
+.rf-frame-menu:has(.rf-frame-friends)::after {
+  position: absolute;
+  top: 20px;
+  right: 59px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f6d999;
+  box-shadow: 0 0 10px #f6d999, -32px 17px 0 -2px rgba(197, 223, 233, .9), 20px 24px 0 -2px rgba(199, 220, 232, .8);
+  content: "";
+  pointer-events: none;
+}
+.rf-frame-menu-heading {
+  min-height: 68px;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(156, 190, 221, .17);
+}
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-heading h2 {
+  max-width: calc(100% - 126px);
+  color: transparent;
+  font-size: 0;
+}
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-heading h2::before {
+  display: block;
+  margin-bottom: 3px;
+  color: #8bdcf3;
+  content: "NIGHT SECURITY SHIFT";
+  font: 800 9px/1.4 "Segoe UI", Inter, system-ui, sans-serif;
+  letter-spacing: .2em;
+}
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-heading h2::after {
+  display: block;
+  color: #f2f6ff;
+  content: "CONNECT YOUR RARE FRIEND";
+  font: 750 19px/1.25 "Segoe UI", Inter, system-ui, sans-serif;
+  letter-spacing: -.02em;
+}
+.rf-frame-menu:has(.rf-frame-friends):has(.rf-runtime-connection[data-wallet-status="connected"]) .rf-frame-menu-heading h2::after { content: "WALLET CONNECTED"; }
+.rf-frame-menu-heading button {
+  border: 1px solid rgba(156, 190, 221, .24) !important;
+  border-radius: 9px !important;
+  background: rgba(17, 29, 48, .85) !important;
+  color: #dbe8f5 !important;
+}
+.rf-frame-menu-body { padding: 18px 20px 20px; }
+.rf-frame-menu-body p { color: #aebdd2; line-height: 1.55; }
+.rf-frame-menu-body > p:first-child { margin-bottom: 15px; }
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-body > p:first-child {
+  color: transparent;
+  font-size: 0;
+}
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-body > p:first-child::after {
+  display: block;
+  color: #c5d1e2;
+  content: "10:00 PM — 06:00 AM\A Something is wrong with this building tonight. Connect a wallet holding a hardwired Rare Friend (Generation 1 or higher) to begin your shift.";
+  white-space: pre-line;
+  font: 13px/1.55 "Segoe UI", Inter, system-ui, sans-serif;
+}
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-body::after {
+  display: block;
+  margin-top: 15px;
+  padding: 11px 12px;
+  border: 1px solid rgba(244, 188, 112, .18);
+  border-radius: 10px;
+  background: linear-gradient(100deg, rgba(255, 187, 101, .09), rgba(255, 187, 101, .025));
+  color: #e8c99a;
+  content: "SHIFT STARTS AT 10:00 PM · ROBINHOOD MAINNET 4663";
+  white-space: pre-line;
+  font: 800 10px/1.55 "Segoe UI", Inter, system-ui, sans-serif;
+  letter-spacing: .035em;
+}
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-body:has(.rf-runtime-connection[data-wallet-status="disconnected"])::after,
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-body:has(.rf-runtime-connection[data-wallet-status="unavailable"])::after {
+  content: "WALLET CONNECTION REQUIRED · HARDWIRED GENERATION 1+";
+}
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-body:has(.rf-runtime-connection[data-wallet-status="connected"])::after {
+  content: "ROBINHOOD MAINNET · CHAIN 4663\A Ownership verified by FriendSDK before your shift begins.";
+}
+.rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-body:has(.rf-runtime-connection[data-wallet-status="connected"]) > p:first-child::after {
+  content: "10:00 PM — 06:00 AM\A Something is wrong with this building tonight. Your verified Friend is ready for the shift.";
+}
+.rf-frame-friends { gap: 9px; margin-block: 13px 4px; }
+.rf-frame-friends button {
+  min-height: 70px;
+  padding: 12px 14px !important;
+  border: 1px solid rgba(135, 176, 209, .23) !important;
+  border-radius: 11px !important;
+  background: linear-gradient(130deg, rgba(35, 52, 77, .9), rgba(20, 32, 52, .86)) !important;
+  color: #edf4ff !important;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+.rf-frame-friends button:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(200, 255, 112, .58) !important; background: linear-gradient(130deg, #344962, #243650) !important; box-shadow: 0 8px 24px rgba(0, 0, 0, .22); }
+.rf-frame-friends button[aria-pressed="true"] { border-color: rgba(200, 255, 112, .64) !important; background: linear-gradient(130deg, rgba(77, 104, 70, .85), rgba(34, 59, 55, .94)) !important; }
+.rf-frame-friends button strong { font-size: 14px; }
+.rf-frame-friends button small { color: #a6bbd2; font-size: 10px; }
+.rf-runtime-connection { gap: 8px; padding: 12px; border: 1px solid rgba(126, 168, 204, .18); border-radius: 12px; background: rgba(9, 17, 30, .46); }
+.rf-runtime-connection[data-wallet-status="connected"]::before { flex-basis: 100%; color: #9be8bd; content: "●  WALLET CONNECTED"; font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+.rf-runtime-connection[data-wallet-status="connected"] p { color: #d1ddef; }
+.rf-runtime-connection p { margin: 0 0 3px; color: #b9c8dc; font-size: 12px; }
+.rf-runtime-connection p[role="alert"] { color: #ffb7ae; }
+.rf-runtime-connection p[role="status"] { color: #9be0f3; }
+.rf-runtime-connection button {
+  border: 1px solid rgba(161, 190, 217, .27) !important;
+  border-radius: 9px !important;
+  background: rgba(30, 46, 68, .9) !important;
+  color: #e7f0fc !important;
+  font-weight: 700 !important;
+}
+.rf-runtime-connection[data-wallet-status="disconnected"] p:not([role]) + button {
+  min-height: 48px !important;
+  padding: 0 20px !important;
+  border-color: rgba(255, 206, 130, .62) !important;
+  background: linear-gradient(115deg, #ffd58c, #f2a862) !important;
+  box-shadow: 0 8px 24px rgba(230, 151, 84, .2), inset 0 1px rgba(255, 255, 255, .38);
+  color: #2b1b16 !important;
+  font-size: 14px !important;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.rf-runtime-connection[data-wallet-status="disconnected"] p:not([role]) + button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.08); box-shadow: 0 11px 30px rgba(230, 151, 84, .3); }
+.rf-runtime-connection button:active:not(:disabled), .rf-frame-friends button:active:not(:disabled) { transform: translateY(1px); }
+.rf-runtime-connection button:focus-visible, .rf-frame-friends button:focus-visible { outline: 3px solid #c8ff70 !important; outline-offset: 2px !important; }
+.rf-game-frame .rf-frame-primary, .rf-frame-scrim .rf-frame-primary { border: 1px solid rgba(200, 255, 112, .55) !important; border-radius: 9px !important; background: linear-gradient(115deg, #c8ff70, #9ce779) !important; color: #102016 !important; font-weight: 800 !important; }
+.rf-frame-menu-body [role="alert"] { color: #ffb7ae; }
+@container (max-width: 520px) {
+  .rf-frame-scrim { padding: 7px; }
+  .rf-frame-menu { border-radius: 14px; }
+  .rf-frame-menu-heading { padding: 11px 13px; }
+  .rf-frame-menu-body { padding: 13px; }
+  .rf-frame-menu:has(.rf-frame-friends)::before { top: 9px; right: 14px; width: 76px; height: 38px; }
+  .rf-frame-menu:has(.rf-frame-friends)::after { top: 16px; right: 44px; }
+  .rf-frame-menu:has(.rf-frame-friends) .rf-frame-menu-heading h2::after { font-size: 15px; }
+}

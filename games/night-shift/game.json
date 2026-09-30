@@ -1,0 +1,10 @@
+{
+  "name": "Rare Friend: Night Shift",
+  "consumable": "Night shift pass",
+  "price": "1000000000000000000",
+  "outcomes": [
+    { "name": "Quiet watch", "chanceBps": 5000, "reward": "500000000000000000" },
+    { "name": "Station log", "chanceBps": 3000, "reward": "1000000000000000000" },
+    { "name": "Morning report", "chanceBps": 2000, "reward": "2500000000000000000" }
+  ]
+}
