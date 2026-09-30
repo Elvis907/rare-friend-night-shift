@@ -78,7 +78,7 @@ function WalletViewport({ session, publicClient, ...props }: Omit<GameHostProps,
     });
     return () => controller.abort();
   }, [session, publicClient, wallet.status, wallet.account, wallet.revision, attempt]);
-  const connection = <div className="rf-runtime-connection">
+  const connection = <div className="rf-runtime-connection" data-wallet-status={wallet.status}>
     {wallet.status === "unavailable" && <><p>No browser wallet found. Enable your wallet extension or open this game in your wallet’s browser.</p><button type="button" onClick={() => { void session.connect(); }}>Check for wallet</button></>}
     {wallet.status === "disconnected" && <p>Connect your wallet to find your Friends on Robinhood.</p>}
     {wallet.status === "connecting" && <p role="status">Connecting wallet…</p>}

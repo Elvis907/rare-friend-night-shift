@@ -22,13 +22,14 @@ const equal = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 const validAddress = (value: unknown): value is Address => typeof value === "string" && isAddress(value) && !equal(value, zeroAddress);
 const validId = (value: unknown): value is bigint => typeof value === "bigint" && value > 0n && value < 1n << 256n;
 const MAX_TRANSFER_LOGS = 100_000;
+const MAX_LOG_BLOCKS = 10_000_000n;
 const MAX_OWNED_FRIENDS = 10_000;
 
 /**
- * Read-only discovery using two indexed, owner-filtered Transfer queries. The
- * canonical Generations contract has no ERC721Enumerable owner enumeration.
- * Only currently held IDs are read; totalMinted and global token scans are never
- * used. Providers must support the filtered history query without truncation.
+ * Read-only discovery using two indexed, owner-filtered Transfer queries per
+ * bounded block range. The canonical Generations contract has no ERC721Enumerable
+ * owner enumeration. Only currently held IDs are read; totalMinted and global
+ * token scans are never used. Providers must support filtered history without truncation.
  * Failures remain errors, never an empty/ineligible result or a scan fallback.
  *
  * This selection snapshot is not lasting authorization. The trusted wrapper
@@ -62,21 +63,33 @@ export async function readOwnedFriends(
     return Object.freeze({ friends: Object.freeze([]), blockNumber, hiddenCount: 0 });
   }
 
-  const query = { address: deployment.generations, event: TRANSFER, fromBlock: 0n, toBlock: blockNumber, strict: true } as const;
-  const [received, sent] = await Promise.all([
-    client.getLogs({ ...query, args: { to: account } }),
-    client.getLogs({ ...query, args: { from: account } }),
-  ]).catch(cause => {
+  async function readTransferRange(fromBlock: bigint, toBlock: bigint) {
+    const query = { address: deployment.generations, event: TRANSFER, fromBlock, toBlock, strict: true } as const;
+    return Promise.all([
+      client.getLogs({ ...query, args: { to: account } }),
+      client.getLogs({ ...query, args: { from: account } }),
+    ]).then(([received, sent]) => [...received, ...sent]).catch(cause => {
+      active();
+      throw new Error("Could not load this account's Friend transfers. Retry with an RPC that supports owner-filtered history; the SDK will not scan the collection.", { cause });
+    });
+  }
+  const transferLogs: Awaited<ReturnType<typeof readTransferRange>> = [];
+  for (let fromBlock = 0n; fromBlock <= blockNumber;) {
     active();
-    throw new Error("Could not load this account's Friend transfers. Retry with an RPC that supports owner-filtered history; the SDK will not scan the collection.", { cause });
-  });
-  active();
-  if (received.length + sent.length > MAX_TRANSFER_LOGS) {
-    throw new Error("This account's Friend transfer history exceeds the discovery limit; use an indexed account provider.");
+    const toBlock = fromBlock + MAX_LOG_BLOCKS - 1n < blockNumber
+      ? fromBlock + MAX_LOG_BLOCKS - 1n
+      : blockNumber;
+    const logs = await readTransferRange(fromBlock, toBlock);
+    active();
+    transferLogs.push(...logs);
+    if (transferLogs.length > MAX_TRANSFER_LOGS) {
+      throw new Error("This account's Friend transfer history exceeds the discovery limit; use an indexed account provider.");
+    }
+    fromBlock = toBlock + 1n;
   }
   // A transfer to self appears in both queries. Deduplicate by its chain position.
-  const events = new Map<string, typeof received[number]>();
-  for (const log of [...received, ...sent]) {
+  const events = new Map<string, typeof transferLogs[number]>();
+  for (const log of transferLogs) {
     const { from, to, tokenId } = log.args;
     if (!equal(log.address, deployment.generations) || log.removed ||
         log.blockNumber === null || log.blockNumber < 0n || log.blockNumber > blockNumber ||

@@ -13,12 +13,12 @@ export type GameWorldInteraction = Readonly<{
 }>;
 export type GameWorldProps = {
   friendId: bigint; world: WorldConfig; spawn: WorldPoint; interactions: readonly GameWorldInteraction[];
-  paused?: boolean; reducedMotion?: boolean; onInteract: (id: string) => void;
+  paused?: boolean; reducedMotion?: boolean; color?: boolean; friendPixelScale?: number; onInteract: (id: string) => void;
 };
 const VIEW = { x: 320, y: 330, width: 960, height: 640 };
 
 /** A game viewport, with canonical pixels, terrain, collision and input; adds no frame or identity flow. */
-export function GameWorld({ friendId, world, spawn, interactions, paused = false, reducedMotion = false, onInteract }: GameWorldProps) {
+export function GameWorld({ friendId, world, spawn, interactions, paused = false, reducedMotion = false, color = false, friendPixelScale = 5, onInteract }: GameWorldProps) {
   const root = useRef<HTMLDivElement>(null), canvas = useRef<HTMLCanvasElement>(null);
   const mover = useRef<ReturnType<typeof createWorldMovement> | null>(null);
   const live = useRef({ paused, reducedMotion, interactions, onInteract });
@@ -42,12 +42,15 @@ export function GameWorld({ friendId, world, spawn, interactions, paused = false
   useEffect(() => {
     const node = canvas.current, context = node?.getContext("2d");
     if (!node || !context) { setFailed(true); setStatus("This browser cannot render the world."); return; }
+    if (!Number.isInteger(friendPixelScale) || friendPixelScale < 3 || friendPixelScale > 8) {
+      setFailed(true); setStatus("Friend sprite scale must be an integer from 3 through 8."); return;
+    }
     const abort = new AbortController(), movement = createWorldMovement(world, spawn);
     mover.current = movement; setNear(null); setFailed(false); setStatus("Loading world and Friend artwork…");
     let frame = 0, previous = 0, lastNear: string | null = null, side: "left" | "right" = "right";
     const stop = () => movement.stop();
     window.addEventListener("blur", stop); document.addEventListener("visibilitychange", stop);
-    void Promise.all([loadWorldAssets(world, { signals: false }, abort.signal), createFriendReader().read(friendId)]).then(([assets, sprites]) => {
+    void Promise.all([loadWorldAssets(world, { signals: false, color }, abort.signal), createFriendReader().read(friendId)]).then(([assets, sprites]) => {
       if (abort.signal.aborted) return;
       setStatus("");
       const render = (now: number) => {
@@ -60,11 +63,12 @@ export function GameWorld({ friendId, world, spawn, interactions, paused = false
           if (state.facing === "left" || state.facing === "right") side = state.facing;
           const rows = spriteFrame(sprites, state.facing, state.walking, live.current.reducedMotion ? 0 : Math.floor(now / 110) % 8, side).frame.rows;
           const pixels = rows.flatMap((row, py) => [...row].flatMap((pixel, px) => pixel === "#" ? [[px, py]] : []));
-          const left = Math.round(x) - 40, top = Math.round(y) - 75;
-          context.save(); context.beginPath(); context.rect(left, top, 80, 80); context.clip(); context.fillStyle = "#fff";
-          for (const [px, py] of pixels) context.fillRect(left + px * 5 - 5, top + py * 5 - 5, 15, 15);
+          const pixelSize = friendPixelScale, spriteSize = 16 * pixelSize;
+          const left = Math.round(x) - spriteSize / 2, top = Math.round(y) - 15 * pixelSize;
+          context.save(); context.beginPath(); context.rect(left, top, spriteSize, spriteSize); context.clip(); context.fillStyle = "#fff";
+          for (const [px, py] of pixels) context.fillRect(left + px * pixelSize - pixelSize, top + py * pixelSize - pixelSize, pixelSize * 3, pixelSize * 3);
           context.fillStyle = "#000";
-          for (const [px, py] of pixels) context.fillRect(left + px * 5, top + py * 5, 5, 5);
+          for (const [px, py] of pixels) context.fillRect(left + px * pixelSize, top + py * pixelSize, pixelSize, pixelSize);
           context.restore();
         } });
         layers.sort((a, b) => a.depth - b.depth).forEach(layer => layer.draw()); context.restore();
@@ -76,7 +80,7 @@ export function GameWorld({ friendId, world, spawn, interactions, paused = false
       frame = requestAnimationFrame(render);
     }).catch(() => { if (!abort.signal.aborted) { setFailed(true); setStatus("World or Friend artwork could not load. Check your connection and retry."); } });
     return () => { abort.abort(); cancelAnimationFrame(frame); stop(); mover.current = null; window.removeEventListener("blur", stop); document.removeEventListener("visibilitychange", stop); };
-  }, [friendId, world, spawn, revision]);
+  }, [friendId, world, spawn, revision, color, friendPixelScale]);
 
   return <div ref={root} className="rf-world-view">
     <div className="rf-world-surface" style={size}>

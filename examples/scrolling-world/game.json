@@ -1,8 +1,12 @@
 {
-  "name": "Long Meadow",
-  "consumable": "Unused example token",
+  "name": "Rare Friend: Night Shift",
+  "consumable": "None",
   "price": "1000000000000000000",
   "outcomes": [
-    { "name": "Unused example reward", "chanceBps": 10000, "reward": "1000000000000000000" }
+    {
+      "name": "Night Shift Complete",
+      "chanceBps": 10000,
+      "reward": "1000000000000000000"
+    }
   ]
 }

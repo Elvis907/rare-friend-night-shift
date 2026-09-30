@@ -25,13 +25,15 @@ function fixture() {
       calls.push({ method: 'getLogs', ...call });
       if (state.logError) throw state.logError;
       assert.equal(call.address, COLLECTION);
-      assert.equal(call.fromBlock, 0n);
-      assert.equal(call.toBlock, state.block);
+      assert(call.fromBlock >= 0n);
+      assert(call.toBlock >= call.fromBlock);
+      assert(call.toBlock - call.fromBlock < 10_000_000n);
       assert.equal(call.event.name, 'Transfer');
       assert.equal(call.strict, true);
       assert.equal(Object.keys(call.args).length, 1);
       assert.equal(Object.values(call.args)[0], OWNER);
-      return state.logs.filter(log => Object.entries(call.args).every(([field, value]) => log.args[field] === value)).reverse();
+      return state.logs.filter(log => log.blockNumber >= call.fromBlock && log.blockNumber <= call.toBlock &&
+        Object.entries(call.args).every(([field, value]) => log.args[field] === value)).reverse();
     },
     async readContract(call) {
       calls.push({ method: 'readContract', ...call });
@@ -71,6 +73,21 @@ test('zero NFT balance requires no history or per-token reads', async () => {
   assert.equal(result.hiddenCount, 0);
   assert.equal(f.calls.length, 1);
   assert.equal(f.calls[0].functionName, 'balanceOf');
+});
+
+test('queries complete filtered history in inclusive ranges of at most ten million blocks', async () => {
+  const f = fixture(); f.state.block = 10_000_001n;
+  const result = await readOwnedFriends(f.client, OWNER);
+  const logs = f.calls.filter(call => call.method === 'getLogs');
+  assert.equal(logs.length, 4);
+  assert.deepEqual(logs.map(({ fromBlock, toBlock, args }) => ({ fromBlock, toBlock, args })), [
+    { fromBlock: 0n, toBlock: 9_999_999n, args: { to: OWNER } },
+    { fromBlock: 0n, toBlock: 9_999_999n, args: { from: OWNER } },
+    { fromBlock: 10_000_000n, toBlock: 10_000_001n, args: { to: OWNER } },
+    { fromBlock: 10_000_000n, toBlock: 10_000_001n, args: { from: OWNER } },
+  ]);
+  assert.equal(result.friends.length, 2);
+  assert.equal(result.hiddenCount, 1);
 });
 
 test('refused log range and truncated history remain errors without collection scan fallback', async () => {
